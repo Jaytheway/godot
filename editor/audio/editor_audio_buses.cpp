@@ -258,15 +258,23 @@ void EditorAudioBus::_notification(int p_what) {
 				channel[i].peak_r = -100;
 			}
 
-			for (int i = 0; i < cc; i++) {
-				if (AudioServer::get_singleton()->is_bus_channel_active(get_index(), i)) {
-					channel[i].prev_active = false;
-				} else {
-					channel[i].prev_active = true;
+			const bool visible = is_visible_in_tree();
+			AudioServer *as = AudioServer::get_singleton();
+
+			if (visible) {
+				const int current_idx = get_index();
+				const int current_cc = as->get_bus_channels(current_idx);
+				if (cc != current_cc) {
+					cc = current_cc;
+					_update_visible_channels();
+				}
+
+				for (int i = 0; i < cc; i++) {
+					channel[i].prev_active = !as->is_bus_channel_active(current_idx, i);
 				}
 			}
 
-			set_process(is_visible_in_tree());
+			set_process(visible);
 		} break;
 
 		case NOTIFICATION_MOUSE_EXIT:
